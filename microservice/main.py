@@ -1,17 +1,14 @@
-"""Retrosynthesis microservice."""
 import asyncio
 import logging
 import random
-from contextlib import asynccontextmanager
 
 import httpx
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 
-from microservice.models import SearchRequest
-from microservice.get_routes import get_routes
+from models import SearchRequest, SearchUpdate, Route, Molecule, Reaction, CatalogEntry
+from get_routes import get_routes
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -24,7 +21,6 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -35,7 +31,6 @@ app.add_middleware(
 
 
 async def process_search_async(smiles: str, callback_url: str, batch_size: int = 1):
-    """Process search asynchronously and post batches to callback URL."""
     logger.info(f"Starting search processing for SMILES: {smiles}, callback: {callback_url}")
 
     try:
@@ -44,9 +39,6 @@ async def process_search_async(smiles: str, callback_url: str, batch_size: int =
 
         for batch_idx, (batch, is_last) in enumerate(route_batches, 1):
             logger.info(f"Processing batch {batch_idx}/{total_batches} ({len(batch)} routes)")
-
-            # Prepare update payload
-            from microservice.models import SearchUpdate, Route, Molecule, Reaction, CatalogEntry
 
             routes = []
             for route_data in batch:
@@ -75,7 +67,6 @@ async def process_search_async(smiles: str, callback_url: str, batch_size: int =
                 is_complete=is_last
             )
 
-            # Post to callback URL
             async with httpx.AsyncClient() as client:
                 try:
                     response = await client.post(
@@ -87,7 +78,6 @@ async def process_search_async(smiles: str, callback_url: str, batch_size: int =
                     logger.info(f"Successfully posted batch {batch_idx}/{total_batches}")
                 except Exception as e:
                     logger.error(f"Failed to post batch {batch_idx}: {e}")
-                    # Post error update
                     error_update = SearchUpdate(
                         routes=[],
                         is_complete=True,
@@ -99,7 +89,6 @@ async def process_search_async(smiles: str, callback_url: str, batch_size: int =
                         pass
                     raise
 
-            # Simulate processing latency (except for last batch)
             if not is_last:
                 delay = random.uniform(0.5, 2.0)
                 await asyncio.sleep(delay)
@@ -108,7 +97,6 @@ async def process_search_async(smiles: str, callback_url: str, batch_size: int =
 
     except Exception as e:
         logger.error(f"Error processing search: {e}")
-        # Try to post error to callback
         error_update = SearchUpdate(
             routes=[],
             is_complete=True,
@@ -124,20 +112,17 @@ async def process_search_async(smiles: str, callback_url: str, batch_size: int =
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
     return {"status": "healthy"}
 
 
 @app.post("/start_search", status_code=status.HTTP_202_ACCEPTED)
 async def start_search(request: SearchRequest):
-    """Start a retrosynthesis search asynchronously."""
     logger.info(f"Received search request for SMILES: {request.smiles}")
 
-    # Start async processing
     asyncio.create_task(process_search_async(
         smiles=request.smiles,
         callback_url=request.callback_url,
-        batch_size=1  # Process one route at a time for incremental updates
+        batch_size=1
     ))
 
     return {"status": "accepted", "message": "Search started"}

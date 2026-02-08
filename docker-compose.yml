@@ -35,8 +35,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app/backend
-    # Tables are created automatically via lifespan event in main.py
-    command: sh -c "sleep 2 && uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload"
+    command: sh -c "sleep 2 && cd /app/backend && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
 
   microservice:
     build:
@@ -49,7 +48,7 @@ services:
       - "8001:8001"
     volumes:
       - ./microservice:/app/microservice
-    command: uvicorn microservice.main:app --host 0.0.0.0 --port 8001 --reload
+    command: sh -c "cd /app/microservice && uvicorn main:app --host 0.0.0.0 --port 8001 --reload"
 
 volumes:
   postgres_data:

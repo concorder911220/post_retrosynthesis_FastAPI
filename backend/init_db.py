@@ -1,6 +1,4 @@
-"""Initialize database tables."""
-from backend.database import engine, Base
-from backend.db_models import Search, Route, RouteMolecule, CatalogEntry, Reaction
+from database import engine, Base
 
 if __name__ == "__main__":
     print("Creating database tables...")

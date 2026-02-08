@@ -1,5 +1,5 @@
 import pytest
-from backend.retrosynthesis_search import (
+from retrosynthesis_search import (
     RouteData,
     update_search_progress,
     SearchStatus,

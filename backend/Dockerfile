@@ -17,11 +17,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY backend /app/backend
 
-# Set Python path
-ENV PYTHONPATH=/app
+# Set Python path to backend directory
+ENV PYTHONPATH=/app/backend
 
 # Expose port
 EXPOSE 8000
 
 # Run application
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

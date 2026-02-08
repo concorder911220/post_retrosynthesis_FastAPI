@@ -11,11 +11,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY microservice /app/microservice
 
-# Set Python path
-ENV PYTHONPATH=/app
+# Set Python path to microservice directory
+ENV PYTHONPATH=/app/microservice
 
 # Expose port
 EXPOSE 8001
 
 # Run application
-CMD ["uvicorn", "microservice.main:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]

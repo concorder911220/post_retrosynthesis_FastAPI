@@ -1,7 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel
 
-from backend.retrosynthesis_search import SearchStatus
+from retrosynthesis_search import SearchStatus
 
 
 class CatalogEntry(BaseModel):

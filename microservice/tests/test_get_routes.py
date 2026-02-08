@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from microservice.get_routes import load_example_routes, get_routes
+from get_routes import load_example_routes, get_routes
 
 
 def test_load_example_routes():
@@ -73,7 +73,7 @@ def test_get_routes():
         },
     ]
 
-    with patch("microservice.get_routes.load_example_routes", return_value=mock_routes):
+    with patch("get_routes.load_example_routes", return_value=mock_routes):
         batches = list(get_routes("CCO", batch_size=1))
 
         assert len(batches) == 3
