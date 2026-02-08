@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: retrosynthesis-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: retrosynthesis
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: retrosynthesis-backend
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/retrosynthesis
+      MICROSERVICE_URL: http://microservice:8001
+      CALLBACK_HOST: backend
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      LOG_LEVEL: INFO
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app/backend
+    # Tables are created automatically via lifespan event in main.py
+    command: sh -c "sleep 2 && uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  microservice:
+    build:
+      context: .
+      dockerfile: microservice/Dockerfile
+    container_name: retrosynthesis-microservice
+    environment:
+      LOG_LEVEL: INFO
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./microservice:/app/microservice
+    command: uvicorn microservice.main:app --host 0.0.0.0 --port 8001 --reload
+
+volumes:
+  postgres_data:
